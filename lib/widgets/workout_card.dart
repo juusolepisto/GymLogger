@@ -9,6 +9,7 @@ class WorkoutCard extends StatelessWidget {
   final int day;
   final String exercise;
   final List<Exercise> exercises;
+  final List<Exercise> previousExercises;
   final WorkoutProgress progress;
   final bool ready;
   const WorkoutCard({
@@ -17,6 +18,7 @@ class WorkoutCard extends StatelessWidget {
     required this.day,
     required this.exercise,
     required this.exercises,
+    this.previousExercises = const [],
     required this.progress,
     required this.ready,
   });
@@ -45,6 +47,7 @@ class WorkoutCard extends StatelessWidget {
               week: week,
               exercise: exercise,
               exercises: exercises,
+              previousExercises: previousExercises,
               progress: progress,
             ),
           ),

@@ -8,12 +8,14 @@ import 'package:url_launcher/url_launcher.dart';
 class ExerciseAccordion extends StatefulWidget {
   final List<Exercise> exercises;
   final SetEntry Function(int exercise, int set)? entryFor;
+  final SetEntry? Function(Exercise exercise, int workSet)? previousEntryFor;
   final void Function(int exercise, int set, SetEntry value)? onSetChanged;
   final bool readOnly;
   const ExerciseAccordion({
     super.key,
     required this.exercises,
     this.entryFor,
+    this.previousEntryFor,
     this.onSetChanged,
     this.readOnly = false,
   });
@@ -257,6 +259,10 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                       initialEntry:
                           widget.entryFor?.call(exercise.id, set.key) ??
                           const SetEntry(),
+                      previousEntry: widget.previousEntryFor?.call(
+                        exercise,
+                        set.key - exercise.warmupSets,
+                      ),
                       onChanged: (value) => widget.onSetChanged?.call(
                         exercise.id,
                         set.key,
@@ -287,6 +293,7 @@ class _SetRow extends StatefulWidget {
   final ExerciseSet prescription;
   final String label;
   final SetEntry initialEntry;
+  final SetEntry? previousEntry;
   final ValueChanged<SetEntry> onChanged;
   final bool readOnly;
   const _SetRow({
@@ -294,6 +301,7 @@ class _SetRow extends StatefulWidget {
     required this.prescription,
     required this.label,
     required this.initialEntry,
+    this.previousEntry,
     required this.onChanged,
     required this.readOnly,
   });
@@ -339,72 +347,97 @@ class _SetRowState extends State<_SetRow> {
           color: _logged ? AppColors.primary : Colors.transparent,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(
-            width: 35,
-            child: Text(
-              widget.label,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: set.warmup ? AppColors.textSecondary : AppColors.primary,
+          Row(
+            children: [
+              SizedBox(
+                width: 35,
+                child: Text(
+                  widget.label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: set.warmup
+                        ? AppColors.textSecondary
+                        : AppColors.primary,
+                  ),
+                ),
               ),
-            ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  set.warmup ? 'Warm-up' : '${set.reps}\nRIR ${set.rir}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: TextField(
+                  controller: _weight,
+                  enabled: !widget.readOnly,
+                  onChanged: (_) => _save(),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '—',
+                    semanticCounterText: 'Weight for set ${widget.label}',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 4,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                flex: 2,
+                child: TextField(
+                  controller: _reps,
+                  enabled: !widget.readOnly,
+                  onChanged: (_) => _save(),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: '—',
+                    semanticCounterText: 'Reps for set ${widget.label}',
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 4,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            flex: 3,
-            child: Text(
-              set.warmup ? 'Warm-up' : '${set.reps}\nRIR ${set.rir}',
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 3,
-            child: TextField(
-              controller: _weight,
-              enabled: !widget.readOnly,
-              onChanged: (_) => _save(),
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                hintText: '—',
-                semanticCounterText: 'Weight for set ${widget.label}',
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 4,
+          if (widget.previousEntry case final previous?)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(35, 0, 4, 6),
+              child: Text(
+                'Last week: Weight ${previous.weight.isEmpty ? '—' : previous.weight} · '
+                'Reps ${previous.reps.isEmpty ? '—' : previous.reps}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: TextField(
-              controller: _reps,
-              enabled: !widget.readOnly,
-              onChanged: (_) => _save(),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-              decoration: InputDecoration(
-                hintText: '—',
-                semanticCounterText: 'Reps for set ${widget.label}',
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 4,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

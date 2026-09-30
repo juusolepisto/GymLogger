@@ -8,12 +8,14 @@ class WorkoutScreen extends StatelessWidget {
   final int week;
   final String exercise;
   final List<Exercise> exercises;
+  final List<Exercise> previousExercises;
   final WorkoutProgress progress;
   const WorkoutScreen({
     super.key,
     required this.week,
     required this.exercise,
     required this.exercises,
+    this.previousExercises = const [],
     required this.progress,
   });
 
@@ -24,6 +26,34 @@ class WorkoutScreen extends StatelessWidget {
       final complete = progress.isCompleted(week, exercise);
       final logged = progress.loggedWorkSets(week, exercise, exercises);
       final total = exercises.fold<int>(0, (sum, e) => sum + e.workSets);
+      final showPrevious =
+          week > 1 &&
+          progress.completedCount(week - 1) == progress.workouts.length;
+
+      SetEntry? previousEntryFor(Exercise current, int workSet) {
+        Exercise? previous;
+        for (final candidate in previousExercises) {
+          if (candidate.name == current.name) {
+            previous = candidate;
+            break;
+          }
+        }
+        if (previous == null) return null;
+        final previousWorkSets = previous.sets
+            .asMap()
+            .entries
+            .where((entry) => !entry.value.warmup)
+            .toList();
+        if (workSet >= previousWorkSets.length) return null;
+        final entry = progress.entry(
+          week - 1,
+          exercise,
+          previous.id,
+          previousWorkSets[workSet].key,
+        );
+        return entry.weight.isEmpty && entry.reps.isEmpty ? null : entry;
+      }
+
       return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -38,6 +68,7 @@ class WorkoutScreen extends StatelessWidget {
               exercises: exercises,
               readOnly: complete,
               entryFor: (id, set) => progress.entry(week, exercise, id, set),
+              previousEntryFor: showPrevious ? previousEntryFor : null,
               onSetChanged: (id, set, entry) =>
                   progress.updateSet(week, exercise, id, set, entry),
             ),

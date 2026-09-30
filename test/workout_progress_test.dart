@@ -35,6 +35,19 @@ const tinyWorkout = [
     ],
   ),
 ];
+const nextTinyWorkout = [
+  Exercise(
+    id: 2000,
+    name: 'Test press',
+    url: 'https://example.com',
+    warmupRange: '0',
+    rest: '1 min',
+    notes: '',
+    intensity: '-',
+    alternatives: [],
+    sets: [ExerciseSet(reps: '6-8', rir: '1')],
+  ),
+];
 
 void logWorkSets(
   WorkoutProgress progress,
@@ -485,6 +498,53 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       restored.dispose();
+    },
+  );
+
+  testWidgets(
+    'Next week shows matching set history after the previous week is complete',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      progress.updateSet(
+        1,
+        'Upper',
+        1000,
+        1,
+        const SetEntry(weight: '42.5', reps: '7'),
+      );
+      await drainWrites(tester, progress);
+      Widget screen() => MaterialApp(
+        theme: ThemeData.dark(),
+        home: WorkoutScreen(
+          week: 2,
+          exercise: 'Upper',
+          exercises: nextTinyWorkout,
+          previousExercises: tinyWorkout,
+          progress: progress,
+        ),
+      );
+      await tester.pumpWidget(screen());
+      expect(find.textContaining('Last week:'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+
+      await tester.runAsync(() async {
+        for (final workout in WorkoutProgram.workouts) {
+          await progress.finish(1, workout);
+        }
+      });
+      await tester.pumpWidget(screen());
+      expect(find.text('Last week: Weight 42.5 · Reps 7'), findsOneWidget);
+      expect(progress.entry(2, 'Upper', 2000, 0).weight, isEmpty);
+      await tester.pumpWidget(const SizedBox());
+
+      await tester.runAsync(() => progress.reopen(1, 'Upper'));
+      await tester.pumpWidget(screen());
+      expect(find.textContaining('Last week:'), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
     },
   );
 }
