@@ -38,6 +38,17 @@ class ProgramOverview extends StatelessWidget {
               onSelectionChanged: (selection) =>
                   progress.selectPlan(selection.single),
               showSelectedIcon: false,
+              style: ButtonStyle(
+                foregroundColor: WidgetStateProperty.resolveWith<Color?>(
+                  (states) {
+                    if (!states.contains(WidgetState.selected)) {
+                      return Colors.white;
+                    }
+
+                    return AppColors.primary;
+                  },
+                ),
+              )
             ),
           ),
           const SizedBox(height: 8),
