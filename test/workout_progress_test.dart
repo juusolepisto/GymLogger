@@ -196,13 +196,13 @@ void main() {
     for (final workout in WorkoutProgram.workouts) {
       final exercises = fiveDayProgram.exercisesFor(1, workout);
       logWorkSets(progress, 1, workout, exercises);
-      await progress.finish(1, workout, exercises);
+      await progress.finish(1, workout);
     }
     expect(progress.completedCount(1), 4);
     expect(progress.currentWeek, 1);
     final arms = fiveDayProgram.exercisesFor(1, 'Arms');
     logWorkSets(progress, 1, 'Arms', arms);
-    await progress.finish(1, 'Arms', arms);
+    await progress.finish(1, 'Arms');
     expect(progress.currentWeek, 2);
     await progress.selectPlan(4);
     expect(progress.currentWeek, 1);
@@ -251,30 +251,25 @@ void main() {
     },
   );
 
-  test(
-    'Drafts, logged sets and completed workouts survive a fresh store',
-    () async {
-      progress.updateSet(
-        1,
-        'Upper',
-        14,
-        0,
-        const SetEntry(weight: '12,5', reps: ''),
-      );
-      final exercises = program.exercisesFor(1, 'Upper');
-      expect(await progress.finish(1, 'Upper', exercises), isFalse);
-      logWorkSets(progress, 1, 'Upper', exercises);
-      expect(await progress.finish(1, 'Upper', exercises), isTrue);
-      final restored = await WorkoutProgress.open(directory);
-      expect(restored.entry(1, 'Upper', 14, 0).weight, '12,5');
-      expect(restored.entry(1, 'Upper', 14, 0).reps, '');
-      expect(restored.entry(1, 'Upper', 14, 3).logged, isTrue);
-      expect(restored.isCompleted(1, 'Upper'), isTrue);
-      expect(restored.isCompleted(2, 'Upper'), isFalse);
-      expect(restored.completedCount(1), 1);
-      restored.dispose();
-    },
-  );
+  test('Drafts, partially logged sets and completed workouts survive a fresh store', () async {
+    progress.updateSet(
+      1,
+      'Upper',
+      14,
+      0,
+      const SetEntry(weight: '12,5', reps: ''),
+    );
+    final exercises = program.exercisesFor(1, 'Upper');
+    expect(await progress.finish(1, 'Upper'), isTrue);
+    final restored = await WorkoutProgress.open(directory);
+    expect(restored.entry(1, 'Upper', 14, 0).weight, '12,5');
+    expect(restored.entry(1, 'Upper', 14, 0).reps, '');
+    expect(restored.canFinish(1, 'Upper', exercises), isFalse);
+    expect(restored.isCompleted(1, 'Upper'), isTrue);
+    expect(restored.isCompleted(2, 'Upper'), isFalse);
+    expect(restored.completedCount(1), 1);
+    restored.dispose();
+  });
 
   test(
     'Four completed workouts advance the week; reopening rolls back',
@@ -282,7 +277,7 @@ void main() {
       for (final workout in WorkoutProgram.workouts) {
         final exercises = program.exercisesFor(1, workout);
         logWorkSets(progress, 1, workout, exercises);
-        await progress.finish(1, workout, exercises);
+        await progress.finish(1, workout);
       }
       expect(progress.completedCount(1), 4);
       expect(progress.currentWeek, 2);
@@ -305,7 +300,7 @@ void main() {
       for (var week = 12; week >= 1; week--) {
         for (final workout in WorkoutProgram.workouts) {
           logWorkSets(progress, week, workout, tinyWorkout);
-          await progress.finish(week, workout, tinyWorkout);
+          await progress.finish(week, workout);
         }
         expect(progress.currentWeek, week == 1 ? isNull : 1);
       }
@@ -385,7 +380,7 @@ void main() {
       for (final workout in WorkoutProgram.workouts) {
         final exercises = program.exercisesFor(1, workout);
         logWorkSets(progress, 1, workout, exercises);
-        await progress.finish(1, workout, exercises);
+        await progress.finish(1, workout);
       }
     });
     await tester.pump();
@@ -418,7 +413,7 @@ void main() {
       expect(find.text('Warm-up: 1 set'), findsOneWidget);
       expect(
         tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
-        isNull,
+        isNotNull,
       );
       await tester.enterText(find.byType(TextField).at(0), '40');
       await drainWrites(tester, progress);
@@ -438,7 +433,7 @@ void main() {
       await drainWrites(tester, progress);
       expect(
         tester.widget<ElevatedButton>(find.byType(ElevatedButton)).onPressed,
-        isNull,
+        isNotNull,
       );
       await tester.enterText(find.byType(TextField).at(1), '8');
       await drainWrites(tester, progress);

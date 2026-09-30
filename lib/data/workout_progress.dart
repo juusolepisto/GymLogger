@@ -158,12 +158,7 @@ class WorkoutProgress extends ChangeNotifier {
     _save();
   }
 
-  Future<bool> finish(
-    int week,
-    String workout,
-    List<Exercise> exercises,
-  ) async {
-    if (!canFinish(week, workout, exercises)) return false;
+  Future<bool> finish(int week, String workout) async {
     _completed.add(_workoutKey(week, workout));
     await _save();
     return saveError == null;

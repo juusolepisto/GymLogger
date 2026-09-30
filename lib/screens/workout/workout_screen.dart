@@ -68,16 +68,10 @@ class WorkoutScreen extends StatelessWidget {
                   )
                 else
                   ElevatedButton.icon(
-                    onPressed:
-                        progress.saving ||
-                            !progress.canFinish(week, exercise, exercises)
+                    onPressed: progress.saving
                         ? null
                         : () async {
-                            final saved = await progress.finish(
-                              week,
-                              exercise,
-                              exercises,
-                            );
+                            final saved = await progress.finish(week, exercise);
                             if (saved && context.mounted) {
                               Navigator.of(context).pop();
                             }
