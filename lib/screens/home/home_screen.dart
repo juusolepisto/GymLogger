@@ -4,7 +4,6 @@ import 'package:gym_logger/data/workout_progress.dart';
 import 'package:gym_logger/widgets/program_overview.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:gym_logger/theme/app_colors.dart';
-import 'package:gym_logger/widgets/color_dropdown.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({

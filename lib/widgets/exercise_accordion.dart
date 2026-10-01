@@ -125,6 +125,15 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
 
   Widget _card(int index, Exercise exercise) {
     final open = _openIndex == index;
+    final workSets = exercise.sets.asMap().entries
+      .where((entry) => !entry.value.warmup)
+      .toList();
+    final loggedSets = workSets.where((set) {
+      return widget.entryFor?.call(exercise.id, set.key).logged ?? false;
+    }).length;
+
+    final exerciseLogged = workSets.isNotEmpty && loggedSets == workSets.length;
+    
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       clipBehavior: Clip.antiAlias,
@@ -141,18 +150,32 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          open
-                              ? 'Exercise ${index + 1} of ${widget.exercises.length}'
-                              : '#${(index + 1).toString().padLeft(2, '0')}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: open
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: <Widget>[
+                            Text(
+                              open
+                                  ? 'Exercise ${index + 1} of ${widget.exercises.length}'
+                                  : '#${(index + 1).toString().padLeft(2, '0')}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: exerciseLogged
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                              ),
+                            ),
+                            Text(
+                              exerciseLogged
+                                ? 'Complete'
+                                : '',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Theme.of(context).colorScheme.primary
+                              ),
+                            )
+                          ],
                         ),
                         const SizedBox(height: 6),
                         Text(
