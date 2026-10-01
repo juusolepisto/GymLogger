@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:gym_logger/data/workout_progress.dart';
-import 'package:gym_logger/theme/app_colors.dart';
 
 class SaveStatus extends StatelessWidget {
   final WorkoutProgress progress;
@@ -14,7 +13,7 @@ class SaveStatus extends StatelessWidget {
             children: [
               Text(
                 progress.saveError!,
-                style: const TextStyle(color: AppColors.tertiary),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               TextButton(
                 onPressed: progress.saving ? null : progress.retrySave,
@@ -24,9 +23,9 @@ class SaveStatus extends StatelessWidget {
           )
         : Text(
             progress.saving ? 'Saving to device...' : 'Saved on this device',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
   );

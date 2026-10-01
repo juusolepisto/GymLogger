@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:gym_logger/data/workout_progress.dart';
 import 'package:gym_logger/models/exercise.dart';
 import 'package:gym_logger/screens/workout/workout_screen.dart';
-import 'package:gym_logger/theme/app_colors.dart';
 
 class WorkoutCard extends StatelessWidget {
   final int week;
@@ -30,13 +29,13 @@ class WorkoutCard extends StatelessWidget {
     final total = exercises.fold<int>(0, (sum, e) => sum + e.workSets);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: AppColors.surfaceLight,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: ready
-              ? AppColors.primary.withValues(alpha: 0.5)
-              : AppColors.border,
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
+              : Theme.of(context).colorScheme.outline,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -71,8 +70,8 @@ class WorkoutCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         color: complete || ready || started
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -86,9 +85,9 @@ class WorkoutCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${exercises.length} exercises · $logged/$total sets logged',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -97,7 +96,9 @@ class WorkoutCard extends StatelessWidget {
               const SizedBox(width: 8),
               Icon(
                 complete ? Icons.check_circle : Icons.chevron_right,
-                color: complete ? AppColors.primary : AppColors.textSecondary,
+                color: complete
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ],
           ),

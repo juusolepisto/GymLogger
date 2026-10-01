@@ -3,10 +3,18 @@ import 'package:gym_logger/data/workout_program.dart';
 import 'package:gym_logger/data/workout_progress.dart';
 import 'package:gym_logger/widgets/program_overview.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:gym_logger/theme/app_colors.dart';
+import 'package:gym_logger/widgets/color_dropdown.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    super.key,
+    required this.palette,
+    required this.onPaletteChanged,
+  });
 
+  final AppPalette palette;
+  final ValueChanged<AppPalette> onPaletteChanged;
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
@@ -58,68 +66,67 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'GymLogger',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+    appBar: AppBar(
+      title: Text(
+        'GymLogger',
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+      actions: [
+        ColorDropdown(
+          value: widget.palette,
+          onChanged: widget.onPaletteChanged,
         ),
+      ],
+    ),
 
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: FutureBuilder<
-                    (Map<int, WorkoutProgram>, WorkoutProgress)>(
-                  future: _loaded,
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'Could not load your local progress. '
-                                'Your saved files have been kept.',
-                              ),
-                              TextButton(
-                                onPressed: () =>
-                                    setState(() => _loaded = _load()),
-                                child: const Text('Retry'),
-                              ),
-                            ],
+    body: SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: FutureBuilder<(Map<int, WorkoutProgram>, WorkoutProgress)>(
+              future: _loaded,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Could not load your local progress. '
+                            'Your saved files have been kept.',
                           ),
-                        ),
-                      );
-                    }
+                          TextButton(
+                            onPressed: () => setState(() => _loaded = _load()),
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
 
-                    if (!snapshot.hasData) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                    final (plans, progress) = snapshot.data!;
+                final (plans, progress) = snapshot.data!;
 
-                    return ProgramOverview(
-                      plans: plans,
-                      progress: progress,
-                    );
-                  },
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(
-                  'v$_appVersion',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
-            ],
+                return ProgramOverview(plans: plans, progress: progress);
+              },
+            ),
           ),
-        ),
-      );
+
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              'v$_appVersion',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

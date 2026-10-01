@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gym_logger/data/workout_program.dart';
 import 'package:gym_logger/data/workout_progress.dart';
-import 'package:gym_logger/theme/app_colors.dart';
 import 'package:gym_logger/widgets/week_header.dart';
 import 'package:gym_logger/widgets/workout_grid.dart';
 
@@ -46,12 +45,12 @@ class _WeekAccordionState extends State<WeekAccordion> {
   Widget build(BuildContext context) => Column(
     children: [
       if (_currentWeek == null)
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 16),
           child: Text(
             'Program completed',
             style: TextStyle(
-              color: AppColors.primary,
+              color: Theme.of(context).colorScheme.primary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -60,10 +59,10 @@ class _WeekAccordionState extends State<WeekAccordion> {
       for (var week = 1; week <= 12; week++)
         Card(
           margin: const EdgeInsets.only(bottom: 12),
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: AppColors.border),
+            side: BorderSide(color: Theme.of(context).colorScheme.outline),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -84,7 +83,10 @@ class _WeekAccordionState extends State<WeekAccordion> {
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                   child: Column(
                     children: [
-                      const Divider(color: AppColors.border, height: 1),
+                      Divider(
+                        color: Theme.of(context).colorScheme.outline,
+                        height: 1,
+                      ),
                       const SizedBox(height: 12),
                       WorkoutGrid(
                         week: week,

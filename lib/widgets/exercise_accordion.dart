@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gym_logger/data/workout_progress.dart';
 import 'package:gym_logger/models/exercise.dart';
-import 'package:gym_logger/theme/app_colors.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ExerciseAccordion extends StatefulWidget {
@@ -78,7 +77,9 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                       ),
                       SelectableText(
                         link.url,
-                        style: const TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       Row(
                         children: [
@@ -147,8 +148,10 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                           style: TextStyle(
                             fontSize: 12,
                             color: open
-                                ? AppColors.primary
-                                : AppColors.textSecondary,
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -162,9 +165,11 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                         const SizedBox(height: 4),
                         Text(
                           '${exercise.workSets} work sets · ${exercise.repSummary} reps',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -172,7 +177,7 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                   ),
                   Icon(
                     open ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ],
               ),
@@ -186,7 +191,7 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Divider(color: AppColors.border),
+                  Divider(color: Theme.of(context).colorScheme.outline),
                   Wrap(
                     spacing: 12,
                     crossAxisAlignment: WrapCrossAlignment.center,
@@ -195,7 +200,9 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                         exercise.rest == '-'
                             ? 'Superset'
                             : 'Rest: ${exercise.rest}',
-                        style: const TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       TextButton.icon(
                         onPressed: () => _showLinks(exercise),
@@ -206,9 +213,9 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                   ),
                   Text(
                     'Warm-up: ${exercise.warmupRange} ${exercise.warmupRange == '1' ? 'set' : 'sets'}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                   if (exercise.intensity != '-')
@@ -274,9 +281,9 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
                   const SizedBox(height: 12),
                   Text(
                     exercise.notes,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -340,11 +347,13 @@ class _SetRowState extends State<_SetRow> {
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: _logged
-            ? AppColors.primary.withValues(alpha: 0.08)
+            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.08)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: _logged ? AppColors.primary : Colors.transparent,
+          color: _logged
+              ? Theme.of(context).colorScheme.primary
+              : Colors.transparent,
         ),
       ),
       child: Column(
@@ -359,8 +368,8 @@ class _SetRowState extends State<_SetRow> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: set.warmup
-                        ? AppColors.textSecondary
-                        : AppColors.primary,
+                        ? Theme.of(context).colorScheme.onSurfaceVariant
+                        : Theme.of(context).colorScheme.primary,
                   ),
                 ),
               ),
@@ -368,9 +377,9 @@ class _SetRowState extends State<_SetRow> {
                 flex: 3,
                 child: Text(
                   set.warmup ? 'Warm-up' : '${set.reps}\nRIR ${set.rir}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ),
@@ -432,9 +441,9 @@ class _SetRowState extends State<_SetRow> {
               child: Text(
                 'Last week: Weight ${previous.weight.isEmpty ? '—' : previous.weight} · '
                 'Reps ${previous.reps.isEmpty ? '—' : previous.reps}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
             ),

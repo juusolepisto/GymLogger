@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:gym_logger/theme/app_colors.dart';
 
 class WeekHeader extends StatelessWidget {
   final int week;
@@ -35,8 +34,8 @@ class WeekHeader extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     color: complete || current
-                        ? AppColors.primary
-                        : AppColors.textSecondary,
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -50,9 +49,9 @@ class WeekHeader extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   '$completedCount of $workoutCount workouts complete',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -61,8 +60,10 @@ class WeekHeader extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: completedCount / workoutCount,
                     minHeight: 4,
-                    backgroundColor: AppColors.surfaceLight,
-                    color: AppColors.primary,
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .surfaceContainerHighest,
+                    color: Theme.of(context).colorScheme.primary,
                     semanticsLabel: 'Week $week completion',
                   ),
                 ),
@@ -71,10 +72,14 @@ class WeekHeader extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           if (complete)
-            const Icon(Icons.check_circle, size: 20, color: AppColors.primary),
+            Icon(
+              Icons.check_circle,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
           Icon(
             expanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-            color: AppColors.textSecondary,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ],
       ),

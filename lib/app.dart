@@ -4,22 +4,36 @@ import 'package:google_fonts/google_fonts.dart';
 import 'screens/home/home_screen.dart';
 import 'theme/app_colors.dart';
 
-class TrackerApp extends StatelessWidget {
+class TrackerApp extends StatefulWidget {
   const TrackerApp({super.key});
 
   @override
+  State<TrackerApp> createState() => _TrackerAppState();
+}
+
+class _TrackerAppState extends State<TrackerApp> {
+  AppPalette _palette = AppPalette.defaultTheme;
+  @override
   Widget build(BuildContext context) {
-    const colorScheme = ColorScheme.dark(
-      primary: AppColors.primary,
-      secondary: AppColors.secondary,
-      tertiary: AppColors.tertiary,
+    final neon = _palette == AppPalette.neonTokyo;
+    final background = neon ? NeonTokyo.background : AppColors.background;
 
-      surface: AppColors.surface,
-
+    final colorScheme = ColorScheme.dark(
+      primary: neon ? NeonTokyo.primary : AppColors.primary,
+      secondary: neon ? NeonTokyo.secondary : AppColors.secondary,
+      tertiary: neon ? NeonTokyo.tertiary : AppColors.tertiary,
+      surface: neon ? NeonTokyo.surface : AppColors.surface,
       onPrimary: Colors.black,
-      onSecondary: AppColors.textPrimary,
-      onTertiary: Colors.white,
-      onSurface: AppColors.textPrimary,
+      onSecondary: neon ? Colors.black : AppColors.textPrimary,
+      onTertiary: neon ? Colors.black : Colors.white,
+      onSurface: neon ? NeonTokyo.textPrimary : AppColors.textPrimary,
+      onSurfaceVariant: neon
+          ? NeonTokyo.textSecondary
+          : AppColors.textSecondary,
+      outline: neon ? NeonTokyo.border : AppColors.border,
+      surfaceContainerHighest: neon
+          ? NeonTokyo.surfaceLight
+          : AppColors.surfaceLight,
     );
 
     final baseTextTheme = GoogleFonts.oswaldTextTheme(
@@ -33,134 +47,117 @@ class TrackerApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
 
-        scaffoldBackgroundColor: AppColors.background,
+        scaffoldBackgroundColor: background,
 
         colorScheme: colorScheme,
 
         textTheme: baseTextTheme.copyWith(
           headlineLarge: baseTextTheme.headlineLarge?.copyWith(
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
           headlineMedium: baseTextTheme.headlineMedium?.copyWith(
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
           titleLarge: baseTextTheme.titleLarge?.copyWith(
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
           titleMedium: baseTextTheme.titleMedium?.copyWith(
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
           bodyLarge: baseTextTheme.bodyLarge?.copyWith(
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
           bodyMedium: baseTextTheme.bodyMedium?.copyWith(
-            color: AppColors.textSecondary,
+            color: colorScheme.onSurfaceVariant,
           ),
           labelLarge: baseTextTheme.labelLarge?.copyWith(
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
         ),
 
-        appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.background,
-          foregroundColor: AppColors.textPrimary,
+        appBarTheme: AppBarTheme(
+          backgroundColor: background,
+          foregroundColor: colorScheme.onSurface,
           elevation: 0,
         ),
 
-        cardTheme: const CardThemeData(
-          color: AppColors.surface,
+        cardTheme: CardThemeData(
+          color: colorScheme.surface,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(12),
-            ),
-            side: BorderSide(
-              color: AppColors.border,
-            ),
+            borderRadius: const BorderRadius.all(Radius.circular(12)),
+            side: BorderSide(color: colorScheme.outline),
           ),
         ),
 
-        inputDecorationTheme: const InputDecorationTheme(
+        inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: AppColors.surfaceLight,
+          fillColor: colorScheme.surfaceContainerHighest,
 
-          hintStyle: TextStyle(
-            color: AppColors.textSecondary,
-          ),
+          hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
 
-          labelStyle: TextStyle(
-            color: AppColors.textSecondary,
-          ),
+          labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
 
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(8),
-            ),
+          border: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
             borderSide: BorderSide.none,
           ),
         ),
 
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.black,
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
 
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(6),
             ),
 
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 14,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           ),
         ),
 
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
+            foregroundColor: colorScheme.primary,
 
-            side: const BorderSide(
-              color: AppColors.border,
-            ),
+            side: BorderSide(color: colorScheme.outline),
 
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(6),
             ),
 
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 14,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           ),
         ),
 
         textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: AppColors.primary,
-          ),
+          style: TextButton.styleFrom(foregroundColor: colorScheme.primary),
         ),
 
         checkboxTheme: CheckboxThemeData(
           fillColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
-              return AppColors.primary;
+              return colorScheme.primary;
             }
 
-            return AppColors.surfaceLight;
+            return colorScheme.surfaceContainerHighest;
           }),
 
-          checkColor: const WidgetStatePropertyAll(
-            Colors.black,
-          ),
+          checkColor: WidgetStatePropertyAll(colorScheme.onPrimary),
 
-          side: const BorderSide(
-            color: AppColors.border,
-          ),
+          side: BorderSide(color: colorScheme.outline),
         ),
       ),
 
-      home: const HomeScreen(),
+      home: HomeScreen(
+        palette: _palette,
+        onPaletteChanged: (newPalette) {
+          setState(() {
+            _palette = newPalette;
+          });
+        },
+      ),
     );
   }
 }

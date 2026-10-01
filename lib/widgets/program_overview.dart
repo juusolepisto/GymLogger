@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gym_logger/data/workout_program.dart';
 import 'package:gym_logger/data/workout_progress.dart';
-import 'package:gym_logger/theme/app_colors.dart';
 import 'package:gym_logger/widgets/save_status.dart';
 import 'package:gym_logger/widgets/week_accordion.dart';
 
@@ -39,22 +38,25 @@ class ProgramOverview extends StatelessWidget {
                   progress.selectPlan(selection.single),
               showSelectedIcon: false,
               style: ButtonStyle(
-                foregroundColor: WidgetStateProperty.resolveWith<Color?>(
-                  (states) {
-                    if (!states.contains(WidgetState.selected)) {
-                      return Colors.white;
-                    }
+                foregroundColor: WidgetStateProperty.resolveWith<Color?>((
+                  states,
+                ) {
+                  if (!states.contains(WidgetState.selected)) {
+                    return Theme.of(context).colorScheme.onSurface;
+                  }
 
-                    return AppColors.primary;
-                  },
-                ),
-              )
+                  return Theme.of(context).colorScheme.primary;
+                }),
+              ),
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Each plan keeps its own progress.',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 16),
           Text(
