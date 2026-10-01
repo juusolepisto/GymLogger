@@ -71,12 +71,6 @@ class _HomeScreenState extends State<HomeScreen> {
         'GymLogger',
         style: Theme.of(context).textTheme.headlineSmall,
       ),
-      actions: [
-        ColorDropdown(
-          value: widget.palette,
-          onChanged: widget.onPaletteChanged,
-        ),
-      ],
     ),
 
     body: SafeArea(
