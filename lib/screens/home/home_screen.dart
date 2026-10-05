@@ -4,6 +4,7 @@ import 'package:gym_logger/data/workout_progress.dart';
 import 'package:gym_logger/widgets/program_overview.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:gym_logger/theme/app_colors.dart';
+import '../changelog/changelog_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -113,10 +114,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
           Padding(
             padding: const EdgeInsets.all(12),
-            child: Text(
-              'v$_appVersion',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            child: TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ChangelogScreen(),
+                  ),
+                );
+              },
+              child:Text(
+                'v$_appVersion',
+                style: TextStyle(color: AppColors.primary),
+              ),
+            )
           ),
         ],
       ),

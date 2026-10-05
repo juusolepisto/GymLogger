@@ -44,6 +44,14 @@ class Exercise {
     required this.alternatives,
   });
 
+  /// The prescribed movement and its available alternatives.
+  List<String> get movementNames =>
+      {name, ...alternatives.map((alternative) => alternative.name)}.toList();
+
+  /// Work sets paired with their original indices used in saved progress.
+  List<MapEntry<int, ExerciseSet>> get indexedWorkSets =>
+      sets.asMap().entries.where((entry) => !entry.value.warmup).toList();
+
   int get warmupSets => sets.where((set) => set.warmup).length;
   int get workSets => sets.length - warmupSets;
   String get repSummary => sets

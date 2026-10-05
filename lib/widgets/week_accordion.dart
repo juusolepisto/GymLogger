@@ -35,6 +35,49 @@ class _WeekAccordionState extends State<WeekAccordion> {
     });
   }
 
+  Future<void> _confirmResetWeek(int week) async {
+    final progress = widget.progress;
+    final plan = progress.workoutsPerWeek;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Reset week $week?'),
+        content: Text(
+          'This will clear all weights, reps, and workout completion for '
+          'week $week in your $plan-workout plan. Other weeks and plans '
+          'will be kept. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Reset week'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted ||
+        confirmed != true ||
+        progress.saving ||
+        progress.workoutsPerWeek != plan) {
+      return;
+    }
+    await progress.resetWeek(week);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          progress.saveError == null
+              ? 'Week $week progress reset.'
+              : 'Week $week was cleared, but could not be saved. Use Retry save.',
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     widget.progress.removeListener(_onProgress);
@@ -92,6 +135,13 @@ class _WeekAccordionState extends State<WeekAccordion> {
                         week: week,
                         program: widget.program,
                         progress: widget.progress,
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: widget.progress.saving
+                            ? null
+                            : () => _confirmResetWeek(week),
+                        icon: const Icon(Icons.refresh),
+                        label: Text('Reset Progress for week $week'),
                       ),
                     ],
                   ),

@@ -33,6 +33,7 @@ class SetEntry {
 class WorkoutProgress extends ChangeNotifier {
   final Directory directory;
   final Map<String, SetEntry> _sets = {};
+  final Map<String, String> _movements = {};
   final Set<String> _completed = {};
   Future<void> _writes = Future.value();
   int _pending = 0;
@@ -76,7 +77,10 @@ class WorkoutProgress extends ChangeNotifier {
             .cast<String>()
             .map((key) => version == 1 ? '4/$key' : key)
             .toSet();
+        final movements = (json['movements'] as Map<String, dynamic>? ?? {})
+            .map((key, value) => MapEntry(key, value as String));
         store._workoutsPerWeek = days as int;
+        store._movements.addAll(movements);
         store._sets.addAll(sets);
         store._completed.addAll(completed);
         // Do not rotate a corrupt primary over the recovered backup.
@@ -114,6 +118,31 @@ class WorkoutProgress extends ChangeNotifier {
       _sets[_setKey(week, workout, exercise, set)] ?? const SetEntry();
   bool isCompleted(int week, String workout) =>
       _completed.contains(_workoutKey(week, workout));
+
+  String movementFor(int week, String workout, Exercise exercise) {
+    final saved = _movements['${_workoutKey(week, workout)}/${exercise.id}'];
+    return exercise.movementNames.contains(saved) ? saved! : exercise.name;
+  }
+
+  Future<void> selectMovement(
+    int week,
+    String workout,
+    Exercise exercise,
+    String name,
+  ) {
+    if (!exercise.movementNames.contains(name)) {
+      throw ArgumentError.value(name, 'name', 'Unknown exercise movement');
+    }
+    final key = '${_workoutKey(week, workout)}/${exercise.id}';
+    if (name == exercise.name) {
+      _movements.remove(key);
+    } else {
+      _movements[key] = name;
+    }
+    _completed.remove(_workoutKey(week, workout));
+    return _save();
+  }
+
   int completedCount(int week) =>
       workouts.where((w) => isCompleted(week, w)).length;
   int? get currentWeek {
@@ -170,6 +199,17 @@ class WorkoutProgress extends ChangeNotifier {
   }
 
   Future<void> retrySave() => _save();
+
+  /// Clears only this week in the selected plan, including unfinished entries.
+  Future<void> resetWeek(int week) {
+    RangeError.checkValueInInterval(week, 1, 12, 'week');
+    final prefix = '$_workoutsPerWeek/$week/';
+    _sets.removeWhere((key, _) => key.startsWith(prefix));
+    _movements.removeWhere((key, _) => key.startsWith(prefix));
+    _completed.removeWhere((key) => key.startsWith(prefix));
+    return _save();
+  }
+
   Future<void> selectPlan(int days) {
     WorkoutProgram.workoutsFor(days); // Validate before changing saved state.
     if (_workoutsPerWeek == days) return Future.value();
@@ -184,6 +224,7 @@ class WorkoutProgress extends ChangeNotifier {
       'version': 2,
       'workoutsPerWeek': _workoutsPerWeek,
       'sets': _sets.map((key, value) => MapEntry(key, value.toJson())),
+      'movements': _movements,
       'completed': _completed.toList()..sort(),
     });
     _pending++;

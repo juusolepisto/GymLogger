@@ -28,7 +28,9 @@ const tinyWorkout = [
     rest: '1 min',
     notes: '',
     intensity: '-',
-    alternatives: [],
+    alternatives: [
+      ExerciseLink(name: 'Dumbbell press', url: 'https://example.com/db'),
+    ],
     sets: [
       ExerciseSet(reps: '', rir: '', warmup: true),
       ExerciseSet(reps: '6-8', rir: '1'),
@@ -92,6 +94,150 @@ void main() {
     if (progress.saving) await progress.flush();
     progress.dispose();
     await directory.delete(recursive: true);
+  });
+
+  test(
+    'Reset clears one week and plan, persists, and moves current week back',
+    () async {
+      const entry = SetEntry(weight: '25', reps: '8');
+      for (final workout in progress.workouts) {
+        progress.updateSet(1, workout, 1, 0, entry);
+        await progress.finish(1, workout);
+      }
+      expect(progress.currentWeek, 2);
+      progress.updateSet(10, 'Upper', 1, 0, entry);
+      await progress.finish(10, 'Upper');
+      await progress.selectPlan(5);
+      progress.updateSet(1, 'Upper', 1, 0, entry);
+      await progress.finish(1, 'Upper');
+      await progress.selectPlan(4);
+      await progress.resetWeek(1);
+      expect(progress.currentWeek, 1);
+      expect(progress.completedCount(1), 0);
+      for (final workout in progress.workouts) {
+        expect(progress.hasEntries(1, workout), isFalse);
+      }
+      expect(progress.isCompleted(10, 'Upper'), isTrue);
+      expect(progress.entry(10, 'Upper', 1, 0).weight, '25');
+      final restored = await WorkoutProgress.open(directory);
+      expect(restored.hasEntries(1, 'Upper'), isFalse);
+      expect(restored.completedCount(1), 0);
+      await restored.selectPlan(5);
+      expect(restored.isCompleted(1, 'Upper'), isTrue);
+      expect(restored.entry(1, 'Upper', 1, 0).weight, '25');
+      restored.dispose();
+      expect(() => progress.resetWeek(0), throwsRangeError);
+      expect(() => progress.resetWeek(13), throwsRangeError);
+    },
+  );
+
+  test(
+    'Movement choices persist, stay scoped, and reset with their week',
+    () async {
+      final exercise = program.exercisesFor(1, 'Upper').first;
+      final alternative = exercise.alternatives.first.name;
+      progress.updateSet(
+        1,
+        'Upper',
+        exercise.id,
+        0,
+        const SetEntry(weight: '25', reps: '8'),
+      );
+      await progress.selectMovement(1, 'Upper', exercise, alternative);
+      final restored = await WorkoutProgress.open(directory);
+      expect(restored.movementFor(1, 'Upper', exercise), alternative);
+      expect(restored.entry(1, 'Upper', exercise.id, 0).weight, '25');
+      expect(restored.movementFor(2, 'Upper', exercise), exercise.name);
+      await restored.selectPlan(5);
+      expect(restored.movementFor(1, 'Upper', exercise), exercise.name);
+      await restored.selectMovement(1, 'Upper', exercise, alternative);
+      await restored.selectPlan(4);
+      await restored.resetWeek(1);
+      expect(restored.movementFor(1, 'Upper', exercise), exercise.name);
+      await restored.selectPlan(5);
+      expect(restored.movementFor(1, 'Upper', exercise), alternative);
+      restored.dispose();
+      final reopened = await WorkoutProgress.open(directory);
+      await reopened.selectPlan(4);
+      expect(reopened.movementFor(1, 'Upper', exercise), exercise.name);
+      reopened.dispose();
+    },
+  );
+
+  testWidgets(
+    'Exercise dropdown selects alternatives and locks completed workouts',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final exercise = program.exercisesFor(1, 'Upper').first;
+      final alternative = exercise.alternatives.first.name;
+      Widget screen() => MaterialApp(
+        home: WorkoutScreen(
+          week: 1,
+          workoutName: 'Upper',
+          exercises: [exercise],
+          progress: progress,
+        ),
+      );
+      await tester.pumpWidget(screen());
+      final dropdown = find.byType(DropdownButton<String>);
+      await tester.tap(dropdown);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(alternative).last);
+      await tester.pumpAndSettle();
+      await drainWrites(tester, progress);
+      expect(progress.movementFor(1, 'Upper', exercise), alternative);
+      expect(
+        tester.widget<DropdownButton<String>>(dropdown).value,
+        alternative,
+      );
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(screen());
+      expect(
+        tester.widget<DropdownButton<String>>(dropdown).value,
+        alternative,
+      );
+      await tester.runAsync(() => progress.finish(1, 'Upper'));
+      await tester.pump();
+      expect(tester.widget<DropdownButton<String>>(dropdown).onChanged, isNull);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets('Week reset requires confirmation and cancel keeps entries', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      progress.updateSet(1, 'Upper', 1, 0, const SetEntry(weight: '25'));
+      await progress.flush();
+    });
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: WeekAccordion(program: program, progress: progress),
+          ),
+        ),
+      ),
+    );
+    final reset = find.text('Reset Progress for week 1');
+    await tester.ensureVisible(reset);
+    await tester.tap(reset);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(progress.hasEntries(1, 'Upper'), isTrue);
+    await tester.tap(reset);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reset week'));
+    await tester.pumpAndSettle();
+    await drainWrites(tester, progress);
+    expect(progress.hasEntries(1, 'Upper'), isFalse);
+    expect(find.text('Week 1 progress reset.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   test('Logging follows valid values, including older saved drafts', () {
@@ -416,7 +562,7 @@ void main() {
         theme: ThemeData.dark(),
         home: WorkoutScreen(
           week: 1,
-          exercise: 'Upper',
+          workoutName: 'Upper',
           exercises: tinyWorkout,
           progress: store,
         ),
@@ -464,7 +610,7 @@ void main() {
                   MaterialPageRoute<void>(
                     builder: (_) => WorkoutScreen(
                       week: 1,
-                      exercise: 'Upper',
+                      workoutName: 'Upper',
                       exercises: tinyWorkout,
                       progress: restored,
                     ),
@@ -520,7 +666,7 @@ void main() {
         theme: ThemeData.dark(),
         home: WorkoutScreen(
           week: 2,
-          exercise: 'Upper',
+          workoutName: 'Upper',
           exercises: nextTinyWorkout,
           previousExercises: tinyWorkout,
           progress: progress,
@@ -536,8 +682,28 @@ void main() {
         }
       });
       await tester.pumpWidget(screen());
-      expect(find.text('Last week: Weight 42.5 · Reps 7'), findsOneWidget);
+      expect(
+        find.text('Last week: Test press · Weight 42.5 · Reps 7'),
+        findsOneWidget,
+      );
       expect(progress.entry(2, 'Upper', 2000, 0).weight, isEmpty);
+      await tester.pumpWidget(const SizedBox());
+
+      await tester.runAsync(() async {
+        await progress.selectMovement(
+          1,
+          'Upper',
+          tinyWorkout.first,
+          'Dumbbell press',
+        );
+        await progress.finish(1, 'Upper');
+      });
+      await tester.pumpWidget(screen());
+      expect(
+        find.text('Last week: Dumbbell press · Weight 42.5 · Reps 7'),
+        findsOneWidget,
+      );
+      expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
 
       await tester.runAsync(() => progress.reopen(1, 'Upper'));

@@ -44,7 +44,7 @@ class WorkoutCard extends StatelessWidget {
           MaterialPageRoute<void>(
             builder: (_) => WorkoutScreen(
               week: week,
-              exercise: exercise,
+              workoutName: exercise,
               exercises: exercises,
               previousExercises: previousExercises,
               progress: progress,
