@@ -1,5 +1,5 @@
+import 'package:gym_logger/models/set_entry.dart';
 import 'package:flutter/material.dart';
-import 'package:gym_logger/data/workout_progress.dart';
 import 'package:gym_logger/models/exercise.dart';
 
 import 'exercise_header.dart';

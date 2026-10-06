@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:gym_logger/data/workout_program.dart';
-import 'package:gym_logger/data/workout_progress.dart';
-import 'package:gym_logger/widgets/save_status.dart';
-import 'package:gym_logger/widgets/week_accordion.dart';
+import 'package:gym_logger/models/workout_program.dart';
+import 'package:gym_logger/ui/workout/view_models/workout_view_model.dart';
+import 'package:gym_logger/ui/core/widgets/save_status.dart';
+import 'package:gym_logger/ui/core/widgets/week_accordion.dart';
 
 class ProgramOverview extends StatelessWidget {
   final Map<int, WorkoutProgram> plans;
-  final WorkoutProgress progress;
+  final WorkoutViewModel progress;
   const ProgramOverview({
     super.key,
     required this.plans,

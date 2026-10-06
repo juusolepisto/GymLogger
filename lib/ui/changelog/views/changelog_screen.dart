@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../data/changelog.dart';
-import '../../theme/app_colors.dart';
+
+import '../changelog.dart';
+import '../../core/theme/app_colors.dart';
 
 class ChangelogScreen extends StatelessWidget {
   const ChangelogScreen({super.key});
@@ -10,13 +11,11 @@ class ChangelogScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Changelog'),
-      ),
+      appBar: AppBar(title: const Text('Changelog')),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
         itemCount: changelog.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        separatorBuilder: (_, _) => const SizedBox(height: 16),
         itemBuilder: (context, index) {
           final entry = changelog[index];
 
@@ -46,9 +45,7 @@ class ChangelogScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text('•  '),
-                          Expanded(
-                            child: Text(change),
-                          ),
+                          Expanded(child: Text(change)),
                         ],
                       ),
                     ),

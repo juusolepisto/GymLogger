@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:gym_logger/data/workout_progress.dart';
+import 'package:gym_logger/ui/workout/view_models/workout_view_model.dart';
 import 'package:gym_logger/models/exercise.dart';
-import 'package:gym_logger/widgets/exercise_accordion.dart';
-import 'package:gym_logger/widgets/save_status.dart';
+import 'package:gym_logger/ui/core/widgets/exercise_accordion.dart';
+import 'package:gym_logger/ui/core/widgets/save_status.dart';
 
 class WorkoutScreen extends StatelessWidget {
   final int week;
   final String workoutName;
   final List<Exercise> exercises;
   final List<Exercise> previousExercises;
-  final WorkoutProgress progress;
+  final WorkoutViewModel progress;
   const WorkoutScreen({
     super.key,
     required this.week,
@@ -18,41 +18,6 @@ class WorkoutScreen extends StatelessWidget {
     this.previousExercises = const [],
     required this.progress,
   });
-
-  Exercise? _previousExerciseFor(Exercise current) {
-    // Follow the prescribed exercise even when a different variation was used.
-    for (final candidate in previousExercises) {
-      if (candidate.name == current.name) return candidate;
-    }
-    for (final candidate in previousExercises) {
-      if (progress.movementFor(week - 1, workoutName, candidate) ==
-          progress.movementFor(week, workoutName, current)) {
-        return candidate;
-      }
-    }
-    return null;
-  }
-
-  String? _previousMovementFor(Exercise current) {
-    final previous = _previousExerciseFor(current);
-    return previous == null
-        ? null
-        : progress.movementFor(week - 1, workoutName, previous);
-  }
-
-  SetEntry? _previousEntryFor(Exercise current, int workSet) {
-    final previous = _previousExerciseFor(current);
-    if (previous == null) return null;
-    final previousWorkSets = previous.indexedWorkSets;
-    if (workSet < 0 || workSet >= previousWorkSets.length) return null;
-    final entry = progress.entry(
-      week - 1,
-      workoutName,
-      previous.id,
-      previousWorkSets[workSet].key,
-    );
-    return entry.weight.isEmpty && entry.reps.isEmpty ? null : entry;
-  }
 
   Future<void> _finishWorkout(BuildContext context) async {
     final saved = await progress.finish(week, workoutName);
@@ -68,9 +33,7 @@ class WorkoutScreen extends StatelessWidget {
       final complete = progress.isCompleted(week, workoutName);
       final logged = progress.loggedWorkSets(week, workoutName, exercises);
       final total = exercises.fold<int>(0, (sum, e) => sum + e.workSets);
-      final showPrevious =
-          week > 1 &&
-          progress.completedCount(week - 1) == progress.workouts.length;
+      final showPrevious = progress.canShowPreviousWeek(week);
 
       return Scaffold(
         appBar: AppBar(
@@ -90,8 +53,23 @@ class WorkoutScreen extends StatelessWidget {
               onMovementChanged: (exercise, name) =>
                   progress.selectMovement(week, workoutName, exercise, name),
               entryFor: (id, set) => progress.entry(week, workoutName, id, set),
-              previousEntryFor: showPrevious ? _previousEntryFor : null,
-              previousMovementFor: showPrevious ? _previousMovementFor : null,
+              previousEntryFor: showPrevious
+                  ? (exercise, set) => progress.previousEntryFor(
+                      week,
+                      workoutName,
+                      exercise,
+                      previousExercises,
+                      set,
+                    )
+                  : null,
+              previousMovementFor: showPrevious
+                  ? (exercise) => progress.previousMovementFor(
+                      week,
+                      workoutName,
+                      exercise,
+                      previousExercises,
+                    )
+                  : null,
               onSetChanged: (id, set, entry) =>
                   progress.updateSet(week, workoutName, id, set, entry),
             ),

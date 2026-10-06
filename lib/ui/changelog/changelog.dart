@@ -1,5 +1,4 @@
-import '../models/changelog_entry.dart';
-
+import '../../models/changelog_entry.dart';
 
 const changelog = [
   ChangelogEntry(

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:gym_logger/data/workout_program.dart';
-import 'package:gym_logger/data/workout_progress.dart';
-import 'package:gym_logger/widgets/week_header.dart';
-import 'package:gym_logger/widgets/workout_grid.dart';
+import 'package:gym_logger/models/workout_program.dart';
+import 'package:gym_logger/ui/workout/view_models/workout_view_model.dart';
+import 'package:gym_logger/ui/core/widgets/week_header.dart';
+import 'package:gym_logger/ui/core/widgets/workout_grid.dart';
 
 class WeekAccordion extends StatefulWidget {
   final WorkoutProgram program;
-  final WorkoutProgress progress;
+  final WorkoutViewModel progress;
   const WeekAccordion({
     super.key,
     required this.program,

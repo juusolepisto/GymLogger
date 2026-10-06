@@ -1,18 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'screens/home/home_screen.dart';
-import 'theme/app_colors.dart';
+import 'dependencies.dart';
+import '../ui/home/view_models/home_view_model.dart';
+
+import '../ui/home/views/home_screen.dart';
+import '../ui/core/theme/app_colors.dart';
 
 class TrackerApp extends StatefulWidget {
-  const TrackerApp({super.key});
+  const TrackerApp({super.key, required this.dependencies});
+  final AppDependencies dependencies;
 
   @override
   State<TrackerApp> createState() => _TrackerAppState();
 }
 
 class _TrackerAppState extends State<TrackerApp> {
-  AppPalette _palette = AppPalette.defaultTheme;
+  final AppPalette _palette = AppPalette.defaultTheme;
+  late final HomeViewModel _home;
+
+  @override
+  void initState() {
+    super.initState();
+    _home = widget.dependencies.createHomeViewModel()..load();
+  }
+
+  @override
+  void dispose() {
+    _home.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final neon = _palette == AppPalette.neonTokyo;
@@ -150,14 +168,7 @@ class _TrackerAppState extends State<TrackerApp> {
         ),
       ),
 
-      home: HomeScreen(
-        palette: _palette,
-        onPaletteChanged: (newPalette) {
-          setState(() {
-            _palette = newPalette;
-          });
-        },
-      ),
+      home: HomeScreen(viewModel: _home),
     );
   }
 }

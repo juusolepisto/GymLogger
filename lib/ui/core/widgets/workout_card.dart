@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gym_logger/data/workout_progress.dart';
+import 'package:gym_logger/ui/workout/view_models/workout_view_model.dart';
 import 'package:gym_logger/models/exercise.dart';
-import 'package:gym_logger/screens/workout/workout_screen.dart';
+import 'package:gym_logger/ui/workout/views/workout_screen.dart';
 
 class WorkoutCard extends StatelessWidget {
   final int week;
@@ -9,7 +9,7 @@ class WorkoutCard extends StatelessWidget {
   final String exercise;
   final List<Exercise> exercises;
   final List<Exercise> previousExercises;
-  final WorkoutProgress progress;
+  final WorkoutViewModel progress;
   final bool ready;
   const WorkoutCard({
     super.key,

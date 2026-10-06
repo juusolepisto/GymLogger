@@ -1,15 +1,18 @@
+import 'package:gym_logger/repositories/file_progress_repository.dart';
+import 'package:gym_logger/models/set_entry.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gym_logger/data/workout_program.dart';
-import 'package:gym_logger/data/workout_progress.dart';
+import 'package:gym_logger/models/workout_program.dart';
+import 'package:gym_logger/ui/workout/view_models/workout_view_model.dart';
 import 'package:gym_logger/models/exercise.dart';
-import 'package:gym_logger/screens/workout/workout_screen.dart';
-import 'package:gym_logger/widgets/week_accordion.dart';
-import 'package:gym_logger/widgets/program_overview.dart';
-import 'package:gym_logger/widgets/workout_card.dart';
+import 'package:gym_logger/ui/workout/views/workout_screen.dart';
+import 'package:gym_logger/ui/core/widgets/week_accordion.dart';
+import 'package:gym_logger/ui/core/widgets/program_overview.dart';
+import 'package:gym_logger/ui/core/widgets/workout_card.dart';
 
 final program = WorkoutProgram.fromJson(
   jsonDecode(File('assets/data/workout_program.json').readAsStringSync())
@@ -52,7 +55,7 @@ const nextTinyWorkout = [
 ];
 
 void logWorkSets(
-  WorkoutProgress progress,
+  WorkoutViewModel progress,
   int week,
   String workout,
   List<Exercise> exercises,
@@ -74,8 +77,8 @@ void logWorkSets(
 
 void main() {
   late Directory directory;
-  late WorkoutProgress progress;
-  Future<void> drainWrites(WidgetTester tester, WorkoutProgress store) async {
+  late WorkoutViewModel progress;
+  Future<void> drainWrites(WidgetTester tester, WorkoutViewModel store) async {
     for (var attempt = 0; attempt < 200 && store.saving; attempt++) {
       await tester.pump();
       await tester.runAsync(
@@ -88,7 +91,7 @@ void main() {
 
   setUp(() async {
     directory = await Directory.systemTemp.createTemp('gym_progress_test_');
-    progress = await WorkoutProgress.open(directory);
+    progress = await WorkoutViewModel.load(FileProgressRepository(directory));
   });
   tearDown(() async {
     if (progress.saving) await progress.flush();
@@ -119,7 +122,9 @@ void main() {
       }
       expect(progress.isCompleted(10, 'Upper'), isTrue);
       expect(progress.entry(10, 'Upper', 1, 0).weight, '25');
-      final restored = await WorkoutProgress.open(directory);
+      final restored = await WorkoutViewModel.load(
+        FileProgressRepository(directory),
+      );
       expect(restored.hasEntries(1, 'Upper'), isFalse);
       expect(restored.completedCount(1), 0);
       await restored.selectPlan(5);
@@ -144,7 +149,9 @@ void main() {
         const SetEntry(weight: '25', reps: '8'),
       );
       await progress.selectMovement(1, 'Upper', exercise, alternative);
-      final restored = await WorkoutProgress.open(directory);
+      final restored = await WorkoutViewModel.load(
+        FileProgressRepository(directory),
+      );
       expect(restored.movementFor(1, 'Upper', exercise), alternative);
       expect(restored.entry(1, 'Upper', exercise.id, 0).weight, '25');
       expect(restored.movementFor(2, 'Upper', exercise), exercise.name);
@@ -157,7 +164,9 @@ void main() {
       await restored.selectPlan(5);
       expect(restored.movementFor(1, 'Upper', exercise), alternative);
       restored.dispose();
-      final reopened = await WorkoutProgress.open(directory);
+      final reopened = await WorkoutViewModel.load(
+        FileProgressRepository(directory),
+      );
       await reopened.selectPlan(4);
       expect(reopened.movementFor(1, 'Upper', exercise), exercise.name);
       reopened.dispose();
@@ -323,7 +332,9 @@ void main() {
           'completed': ['1/Upper', '1/Lower', '1/Push', '1/Pull'],
         }),
       );
-      final migrated = await WorkoutProgress.open(directory);
+      final migrated = await WorkoutViewModel.load(
+        FileProgressRepository(directory),
+      );
       expect(migrated.workoutsPerWeek, 4);
       expect(migrated.currentWeek, 2);
       expect(migrated.entry(1, 'Upper', 14, 3).weight, '35');
@@ -338,7 +349,9 @@ void main() {
         const SetEntry(weight: '50', reps: '5'),
       );
       await migrated.flush();
-      final restored = await WorkoutProgress.open(directory);
+      final restored = await WorkoutViewModel.load(
+        FileProgressRepository(directory),
+      );
       expect(restored.workoutsPerWeek, 5);
       expect(restored.entry(1, 'Upper', 14, 3).weight, '50');
       await restored.selectPlan(4);
@@ -420,7 +433,9 @@ void main() {
     );
     final exercises = program.exercisesFor(1, 'Upper');
     expect(await progress.finish(1, 'Upper'), isTrue);
-    final restored = await WorkoutProgress.open(directory);
+    final restored = await WorkoutViewModel.load(
+      FileProgressRepository(directory),
+    );
     expect(restored.entry(1, 'Upper', 14, 0).weight, '12,5');
     expect(restored.entry(1, 'Upper', 14, 0).reps, '');
     expect(restored.canFinish(1, 'Upper', exercises), isFalse);
@@ -446,7 +461,9 @@ void main() {
         progress.canFinish(1, 'Upper', program.exercisesFor(1, 'Upper')),
         isTrue,
       );
-      final restored = await WorkoutProgress.open(directory);
+      final restored = await WorkoutViewModel.load(
+        FileProgressRepository(directory),
+      );
       expect(restored.currentWeek, 1);
       expect(restored.completedCount(1), 3);
       restored.dispose();
@@ -464,7 +481,9 @@ void main() {
         expect(progress.currentWeek, week == 1 ? isNull : 1);
       }
       expect(progress.completedCount(12), 4);
-      final restored = await WorkoutProgress.open(directory);
+      final restored = await WorkoutViewModel.load(
+        FileProgressRepository(directory),
+      );
       expect(restored.currentWeek, isNull);
       restored.dispose();
     },
@@ -476,7 +495,9 @@ void main() {
     progress.updateSet(1, 'Upper', 14, 0, const SetEntry(weight: '25'));
     await progress.flush();
     await File('${directory.path}/progress.json').writeAsString('{broken');
-    final restored = await WorkoutProgress.open(directory);
+    final restored = await WorkoutViewModel.load(
+      FileProgressRepository(directory),
+    );
     expect(restored.entry(1, 'Upper', 14, 0).weight, '20');
     await restored.retrySave();
     expect(restored.saveError, isNull);
@@ -488,7 +509,10 @@ void main() {
     () async {
       final file = File('${directory.path}/progress.json');
       await file.writeAsString('{broken');
-      await expectLater(WorkoutProgress.open(directory), throwsFormatException);
+      await expectLater(
+        WorkoutViewModel.load(FileProgressRepository(directory)),
+        throwsFormatException,
+      );
       expect(await file.readAsString(), '{broken');
     },
   );
@@ -510,7 +534,9 @@ void main() {
       await obstruction.delete();
       await progress.retrySave();
       expect(progress.saveError, isNull);
-      final restored = await WorkoutProgress.open(directory);
+      final restored = await WorkoutViewModel.load(
+        FileProgressRepository(directory),
+      );
       expect(restored.entry(1, 'Upper', 14, 0).weight, '30');
       restored.dispose();
     },
@@ -558,7 +584,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      Widget screen(WorkoutProgress store) => MaterialApp(
+      Widget screen(WorkoutViewModel store) => MaterialApp(
         theme: ThemeData.dark(),
         home: WorkoutScreen(
           week: 1,
@@ -598,7 +624,7 @@ void main() {
       await drainWrites(tester, progress);
       await tester.pumpWidget(const SizedBox());
       final restored = (await tester.runAsync(
-        () => WorkoutProgress.open(directory),
+        () => WorkoutViewModel.load(FileProgressRepository(directory)),
       ))!;
       await tester.pumpWidget(
         MaterialApp(

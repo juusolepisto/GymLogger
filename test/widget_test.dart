@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:gym_logger/models/exercise.dart';
-import 'package:gym_logger/widgets/exercise_accordion.dart';
+import 'package:gym_logger/ui/core/widgets/exercise_accordion.dart';
 
 final program = (jsonDecode(
   File('assets/data/workout_program.json').readAsStringSync(),

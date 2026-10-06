@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:gym_logger/data/workout_progress.dart';
+import 'package:gym_logger/ui/workout/view_models/workout_view_model.dart';
 
 class SaveStatus extends StatelessWidget {
-  final WorkoutProgress progress;
+  final WorkoutViewModel progress;
   const SaveStatus({super.key, required this.progress});
   @override
   Widget build(BuildContext context) => ListenableBuilder(

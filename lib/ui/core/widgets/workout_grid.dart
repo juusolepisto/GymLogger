@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:gym_logger/data/workout_program.dart';
-import 'package:gym_logger/data/workout_progress.dart';
-import 'package:gym_logger/widgets/workout_card.dart';
+import 'package:gym_logger/models/workout_program.dart';
+import 'package:gym_logger/ui/workout/view_models/workout_view_model.dart';
+import 'package:gym_logger/ui/core/widgets/workout_card.dart';
 
 class WorkoutGrid extends StatelessWidget {
   final int week;
   final WorkoutProgram program;
-  final WorkoutProgress progress;
+  final WorkoutViewModel progress;
   const WorkoutGrid({
     super.key,
     required this.week,
