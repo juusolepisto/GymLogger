@@ -60,29 +60,45 @@ class ExerciseHeader extends StatelessWidget {
                   const SizedBox(height: 6),
                   if (open && exercise.movementNames.length > 1)
                     DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: movement ?? exercise.name,
-                        isExpanded: false,
-                        itemHeight: null,
-                        style: Theme.of(context).textTheme.titleMedium,
-                        items: [
-                          for (final name in exercise.movementNames)
-                            DropdownMenuItem(
-                              value: name,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                ),
-                                child: Text(name),
-                              ),
+                      child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
                             ),
-                        ],
-                        onChanged: onMovementChanged == null
-                            ? null
-                            : (value) {
-                                if (value != null) onMovementChanged!(value);
-                              },
-                      ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: colors.primary),
+                            borderRadius: BorderRadius.circular(4),
+                            boxShadow: [
+                              BoxShadow(
+                                color: colors.onSurfaceVariant.withValues(alpha: 0.1),
+                                blurRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: DropdownButton<String>(
+                          value: movement ?? exercise.name,
+                          isExpanded: false,
+                          itemHeight: null,
+                          style: Theme.of(context).textTheme.titleMedium,
+                          items: [
+                            for (final name in exercise.movementNames)
+                              DropdownMenuItem(
+                                value: name,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  child: Text(name),
+                                ),
+                              ),
+                          ],
+                          onChanged: onMovementChanged == null
+                              ? null
+                              : (value) {
+                                  if (value != null) onMovementChanged!(value);
+                                },
+                        ),
+                      )
                     )
                   else
                     Text(

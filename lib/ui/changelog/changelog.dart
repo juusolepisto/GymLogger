@@ -30,4 +30,10 @@ const changelog = [
       'The user can log what type of movement they performed for each exercise.',
     ],
   ),
+  ChangelogEntry(
+    version: '1.0.4',
+    changes: [
+      'Exercise variation dropdown made more clear.',
+    ],
+  ),
 ];
