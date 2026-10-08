@@ -78,6 +78,48 @@ class _WeekAccordionState extends State<WeekAccordion> {
     );
   }
 
+  Future<void> _confirmResetAll() async {
+    final progress = widget.progress;
+    final plan = progress.workoutsPerWeek;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset all progress?'),
+        content: Text(
+          'This will clear all weights, reps, and workout completion for '
+          'all weeks in your $plan-workout plan. This cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Reset all'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted ||
+        confirmed != true ||
+        progress.saving ||
+        progress.workoutsPerWeek != plan) {
+      return;
+    }
+    await progress.resetAll();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          progress.saveError == null
+              ? 'All progress reset.'
+              : 'All progress was cleared, but could not be saved. Use Retry save.',
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     widget.progress.removeListener(_onProgress);
@@ -90,14 +132,24 @@ class _WeekAccordionState extends State<WeekAccordion> {
       if (_currentWeek == null)
         Padding(
           padding: EdgeInsets.only(bottom: 16),
-          child: Text(
-            'Program completed',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+          child: Column(
+            children: [
+            Text(
+              'Program completed',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
+            ElevatedButton.icon(
+              onPressed: widget.progress.saving
+                  ? null
+                  : () => _confirmResetAll(),
+              icon: const Icon(Icons.refresh),
+              label: Text('Start Over'),
+            ),
+          ])
         ),
       for (var week = 1; week <= 12; week++)
         Card(

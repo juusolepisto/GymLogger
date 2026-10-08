@@ -13,6 +13,7 @@ import 'package:gym_logger/ui/workout/views/workout_screen.dart';
 import 'package:gym_logger/ui/core/widgets/week_accordion.dart';
 import 'package:gym_logger/ui/core/widgets/program_overview.dart';
 import 'package:gym_logger/ui/core/widgets/workout_card.dart';
+import 'package:gym_logger/ui/core/widgets/week_header.dart';
 
 final program = WorkoutProgram.fromJson(
   jsonDecode(File('assets/data/workout_program.json').readAsStringSync())
@@ -98,6 +99,133 @@ void main() {
     progress.dispose();
     await directory.delete(recursive: true);
   });
+
+  for (final plan in [4, 5]) {
+    test(
+      'Program reset persists and preserves the other plan ($plan workouts)',
+      () async {
+        final exercise = tinyWorkout.first;
+        final alternative = exercise.alternatives.first.name;
+        for (final days in [4, 5]) {
+          await progress.selectPlan(days);
+          for (var week = 1; week <= 12; week++) {
+            for (final workout in progress.workouts) {
+              progress.updateSet(
+                week,
+                workout,
+                exercise.id,
+                0,
+                SetEntry(weight: '$days', reps: '8'),
+              );
+              await progress.selectMovement(
+                week,
+                workout,
+                exercise,
+                alternative,
+              );
+              await progress.finish(week, workout);
+            }
+          }
+        }
+        await progress.selectPlan(plan);
+        expect(progress.currentWeek, isNull);
+        await progress.resetAll();
+        expect(progress.currentWeek, 1);
+
+        final restored = await WorkoutViewModel.load(
+          FileProgressRepository(directory),
+        );
+        addTearDown(restored.dispose);
+        expect(restored.workoutsPerWeek, plan);
+        expect(restored.currentWeek, 1);
+        for (var week = 1; week <= 12; week++) {
+          expect(restored.completedCount(week), 0);
+          for (final workout in restored.workouts) {
+            expect(restored.hasEntries(week, workout), isFalse);
+            expect(
+              restored.movementFor(week, workout, exercise),
+              exercise.name,
+            );
+          }
+        }
+        final otherPlan = plan == 4 ? 5 : 4;
+        await restored.selectPlan(otherPlan);
+        expect(restored.currentWeek, isNull);
+        for (var week = 1; week <= 12; week++) {
+          expect(restored.completedCount(week), otherPlan);
+          for (final workout in restored.workouts) {
+            final entry = restored.entry(week, workout, exercise.id, 0);
+            expect(entry.weight, '$otherPlan');
+            expect(entry.reps, '8');
+            expect(restored.movementFor(week, workout, exercise), alternative);
+          }
+        }
+      },
+    );
+  }
+
+  testWidgets(
+    'Start over requires every workout, supports cancel, and opens week 1',
+    (tester) async {
+      await tester.runAsync(() async {
+        progress.updateSet(
+          1,
+          'Upper',
+          1,
+          0,
+          const SetEntry(weight: '25', reps: '8'),
+        );
+        for (var week = 1; week <= 12; week++) {
+          for (final workout in progress.workouts) {
+            // A gap in an earlier week must prevent restarting, even with week 12 done.
+            if (week != 6 || workout != 'Upper')
+              await progress.finish(week, workout);
+          }
+        }
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: WeekAccordion(program: program, progress: progress),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Start Over'), findsNothing);
+      expect(find.text('Program completed'), findsNothing);
+
+      await tester.runAsync(() => progress.finish(6, 'Upper'));
+      await tester.pumpAndSettle();
+      expect(find.text('Start Over'), findsOneWidget);
+      expect(find.text('Program completed'), findsOneWidget);
+      await tester.tap(find.text('Start Over'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(progress.currentWeek, isNull);
+      expect(progress.entry(1, 'Upper', 1, 0).weight, '25');
+      expect(find.text('Start Over'), findsOneWidget);
+
+      await tester.tap(find.text('Start Over'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Reset all'));
+      await tester.pumpAndSettle();
+      await drainWrites(tester, progress);
+      expect(progress.currentWeek, 1);
+      expect(progress.hasEntries(1, 'Upper'), isFalse);
+      expect(find.text('Start Over'), findsNothing);
+      expect(find.text('Program completed'), findsNothing);
+      expect(find.text('All progress reset.'), findsOneWidget);
+      final headers = tester.widgetList<WeekHeader>(find.byType(WeekHeader));
+      expect(
+        headers.where((header) => header.expanded).map((header) => header.week),
+        [1],
+      );
+      expect(headers.first.current, isTrue);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   test(
     'Reset clears one week and plan, persists, and moves current week back',

@@ -35,6 +35,39 @@ class FakeProgress implements ProgressRepository {
 
 void main() {
   test(
+    'Program reset saves once, notifies, and can retry a failed save',
+    () async {
+      final repository = FakeProgress();
+      final vm = await WorkoutViewModel.load(repository);
+      addTearDown(vm.dispose);
+      vm.updateSet(12, 'Upper', 1, 0, const SetEntry(weight: '30', reps: '8'));
+      await vm.finish(12, 'Upper');
+      final savedBeforeReset = repository.snapshots.length;
+      final observedWeeks = <int?>[];
+      vm.addListener(() => observedWeeks.add(vm.currentWeek));
+
+      repository.fail = true;
+      await vm.resetAll();
+      expect(vm.saveError, isNotNull);
+      expect(vm.saving, isFalse);
+      expect(vm.hasEntries(12, 'Upper'), isFalse);
+      expect(vm.isCompleted(12, 'Upper'), isFalse);
+      expect(observedWeeks, isNotEmpty);
+      expect(observedWeeks, everyElement(1));
+
+      repository.fail = false;
+      await vm.retrySave();
+      expect(vm.saveError, isNull);
+      expect(repository.snapshots.length, savedBeforeReset + 1);
+      expect(repository.snapshots.last.hasEntries(12, 'Upper'), isFalse);
+      expect(repository.snapshots.last.isCompleted(12, 'Upper'), isFalse);
+
+      await vm.resetAll();
+      expect(repository.snapshots.length, savedBeforeReset + 2);
+    },
+  );
+
+  test(
     'Home retries loading and tolerates unavailable version metadata',
     () async {
       final programs = FakePrograms()..fail = true;

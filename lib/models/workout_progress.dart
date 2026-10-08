@@ -147,6 +147,13 @@ class WorkoutProgress {
     _completed.removeWhere((key) => key.startsWith(prefix));
   }
 
+  /// Clears all progress in the selected plan, including unfinished entries.
+  void resetAll(){
+    for (var week = 1; week <= 12; week++) {
+      resetWeek(week);
+    }
+  }
+
   void selectPlan(int days) {
     WorkoutProgram.workoutsFor(days); // Validate before changing saved state.
     if (_workoutsPerWeek == days) return;

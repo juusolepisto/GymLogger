@@ -110,6 +110,11 @@ class WorkoutViewModel extends ChangeNotifier {
     return _save();
   }
 
+  Future<void> resetAll() {
+    _progress.resetAll();
+    return _save();
+  }
+
   Future<void> selectPlan(int days) {
     if (days == workoutsPerWeek) return Future.value();
     _progress.selectPlan(days);

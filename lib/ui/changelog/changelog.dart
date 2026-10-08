@@ -34,6 +34,7 @@ const changelog = [
     version: '1.0.4',
     changes: [
       'Exercise variation dropdown made more clear.',
+      'Added ability to reset all progress and start over.',
     ],
   ),
 ];
