@@ -47,6 +47,7 @@ class WorkoutScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: ExerciseAccordion(
               exercises: exercises,
+              previousLabel: week == 1 ? 'Previous run - Week 12' : 'Last week',
               readOnly: complete,
               movementFor: (exercise) =>
                   progress.movementFor(week, workoutName, exercise),

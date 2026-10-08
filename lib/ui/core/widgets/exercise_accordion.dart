@@ -10,6 +10,7 @@ class ExerciseAccordion extends StatefulWidget {
   final SetEntry? Function(Exercise exercise, int workSet)? previousEntryFor;
   final String? Function(Exercise exercise)? previousMovementFor;
   final void Function(int exercise, int set, SetEntry value)? onSetChanged;
+  final String previousLabel;
   final bool readOnly;
   final String Function(Exercise exercise)? movementFor;
   final void Function(Exercise exercise, String name)? onMovementChanged;
@@ -19,6 +20,7 @@ class ExerciseAccordion extends StatefulWidget {
     this.entryFor,
     this.previousEntryFor,
     this.previousMovementFor,
+    this.previousLabel = 'Last week',
     this.onSetChanged,
     this.readOnly = false,
     this.movementFor,
@@ -53,6 +55,7 @@ class _ExerciseAccordionState extends State<ExerciseAccordion> {
           previousEntryFor: widget.previousEntryFor == null
               ? null
               : (set) => widget.previousEntryFor!(entry.value, set),
+          previousLabel: widget.previousLabel,
           previousMovement: widget.previousMovementFor?.call(entry.value),
           onSetChanged: (set, value) =>
               widget.onSetChanged?.call(entry.value.id, set, value),

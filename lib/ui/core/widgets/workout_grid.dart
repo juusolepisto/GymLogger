@@ -28,9 +28,10 @@ class WorkoutGrid extends StatelessWidget {
             day: entry.key + 1,
             exercise: entry.value,
             exercises: program.exercisesFor(week, entry.value),
-            previousExercises: week > 1
-                ? program.exercisesFor(week - 1, entry.value)
-                : const [],
+            previousExercises: program.exercisesFor(
+              week == 1 ? 12 : week - 1,
+              entry.value,
+            ),
             progress: progress,
             ready: progress.currentWeek == week && next == entry.value,
           ),

@@ -78,16 +78,18 @@ class _WeekAccordionState extends State<WeekAccordion> {
     );
   }
 
-  Future<void> _confirmResetAll() async {
+  Future<void> _levelUp() async {
     final progress = widget.progress;
     final plan = progress.workoutsPerWeek;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reset all progress?'),
+        title: const Text('Level up and start new game plus?'),
         content: Text(
-          'This will clear all weights, reps, and workout completion for '
-          'all weeks in your $plan-workout plan. This cannot be undone.',
+          'Earn Prestige ${progress.prestige + 1} and restart your '
+          '$plan-workout plan at week 1. Week 12 weights, variations, and reps '
+          'will be kept as your week 1 reference. Current logs and completion '
+          'will be cleared. This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -96,7 +98,7 @@ class _WeekAccordionState extends State<WeekAccordion> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Reset all'),
+            child: const Text('New Game Plus'),
           ),
         ],
       ),
@@ -107,14 +109,15 @@ class _WeekAccordionState extends State<WeekAccordion> {
         progress.workoutsPerWeek != plan) {
       return;
     }
-    await progress.resetAll();
+    if (progress.currentWeek != null) return;
+    await progress.startNewGamePlus();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           progress.saveError == null
-              ? 'All progress reset.'
-              : 'All progress was cleared, but could not be saved. Use Retry save.',
+              ? 'Prestige ${progress.prestige}! New Game Plus started.'
+              : 'New Game Plus started, but could not be saved. Use Retry save.',
         ),
       ),
     );
@@ -133,23 +136,23 @@ class _WeekAccordionState extends State<WeekAccordion> {
         Padding(
           padding: EdgeInsets.only(bottom: 16),
           child: Column(
+            spacing: 6,
             children: [
-            Text(
-              'Program completed',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+              Text(
+                'Program completed',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            ElevatedButton.icon(
-              onPressed: widget.progress.saving
-                  ? null
-                  : () => _confirmResetAll(),
-              icon: const Icon(Icons.refresh),
-              label: Text('Start Over'),
-            ),
-          ])
+              ElevatedButton.icon(
+                onPressed: widget.progress.saving ? null : () => _levelUp(),
+                icon: const Icon(Icons.add),
+                label: Text('New Game Plus'),
+              ),
+            ],
+          ),
         ),
       for (var week = 1; week <= 12; week++)
         Card(

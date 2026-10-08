@@ -101,6 +101,126 @@ void main() {
   });
 
   for (final plan in [4, 5]) {
+    testWidgets('Week 1 displays the previous run ($plan)', (tester) async {
+      await tester.runAsync(() async {
+        await progress.selectPlan(plan);
+        progress.updateSet(
+          12,
+          'Upper',
+          1000,
+          1,
+          const SetEntry(weight: '40', reps: '7'),
+        );
+        await progress.selectMovement(
+          12,
+          'Upper',
+          tinyWorkout.first,
+          'Dumbbell press',
+        );
+        for (var week = 1; week <= 12; week++) {
+          for (final workout in progress.workouts) {
+            await progress.finish(week, workout);
+          }
+        }
+        await progress.startNewGamePlus();
+      });
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WorkoutScreen(
+            week: 1,
+            workoutName: 'Upper',
+            exercises: nextTinyWorkout,
+            previousExercises: tinyWorkout,
+            progress: progress,
+          ),
+        ),
+      );
+      expect(
+        find.textContaining('Previous run - Week 12: Dumbbell press'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Weight 40'), findsOneWidget);
+      expect(find.textContaining('Reps 7'), findsOneWidget);
+      for (final field in tester.widgetList<TextField>(
+        find.byType(TextField),
+      )) {
+        expect(field.controller!.text, isEmpty);
+      }
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+    });
+    test(
+      'New Game Plus keeps only the latest final-week reference ($plan)',
+      () async {
+        await progress.selectPlan(plan);
+        expect(progress.prestige, 0);
+        expect(progress.canShowPreviousWeek(1), isFalse);
+        expect(() => progress.startNewGamePlus(), throwsStateError);
+        for (var run = 1; run <= 2; run++) {
+          progress.updateSet(
+            12,
+            'Upper',
+            1000,
+            1,
+            SetEntry(weight: '${run * 40}', reps: '7'),
+          );
+          await progress.selectMovement(
+            12,
+            'Upper',
+            tinyWorkout.first,
+            'Dumbbell press',
+          );
+          for (var week = 1; week <= 12; week++) {
+            for (final workout in progress.workouts) {
+              await progress.finish(week, workout);
+            }
+          }
+          await progress.startNewGamePlus();
+          final restored = await WorkoutViewModel.load(
+            FileProgressRepository(directory),
+          );
+          expect(restored.prestige, run);
+          expect(restored.currentWeek, 1);
+          expect(restored.canShowPreviousWeek(1), isTrue);
+          expect(restored.entry(1, 'Upper', 2000, 0).weight, isEmpty);
+          final previous = restored.previousEntryFor(
+            1,
+            'Upper',
+            nextTinyWorkout.first,
+            tinyWorkout,
+            0,
+          );
+          expect(previous?.weight, '${run * 40}');
+          expect(previous?.reps, '7');
+          expect(
+            restored.previousMovementFor(
+              1,
+              'Upper',
+              nextTinyWorkout.first,
+              tinyWorkout,
+            ),
+            'Dumbbell press',
+          );
+          expect(
+            restored.previousEntryFor(
+              1,
+              'Upper',
+              nextTinyWorkout.first,
+              tinyWorkout,
+              1,
+            ),
+            isNull,
+          );
+          await restored.resetWeek(1);
+          expect(restored.prestige, run);
+          expect(restored.canShowPreviousWeek(1), isTrue);
+          await restored.selectPlan(plan == 4 ? 5 : 4);
+          expect(restored.prestige, 0);
+          expect(restored.canShowPreviousWeek(1), isFalse);
+          restored.dispose();
+        }
+      },
+    );
     test(
       'Program reset persists and preserves the other plan ($plan workouts)',
       () async {
@@ -129,7 +249,7 @@ void main() {
         }
         await progress.selectPlan(plan);
         expect(progress.currentWeek, isNull);
-        await progress.resetAll();
+        await progress.startNewGamePlus();
         expect(progress.currentWeek, 1);
 
         final restored = await WorkoutViewModel.load(
@@ -178,8 +298,9 @@ void main() {
         for (var week = 1; week <= 12; week++) {
           for (final workout in progress.workouts) {
             // A gap in an earlier week must prevent restarting, even with week 12 done.
-            if (week != 6 || workout != 'Upper')
+            if (week != 6 || workout != 'Upper') {
               await progress.finish(week, workout);
+            }
           }
         }
       });
@@ -192,31 +313,31 @@ void main() {
           ),
         ),
       );
-      expect(find.text('Start Over'), findsNothing);
+      expect(find.text('New Game Plus'), findsNothing);
       expect(find.text('Program completed'), findsNothing);
 
       await tester.runAsync(() => progress.finish(6, 'Upper'));
       await tester.pumpAndSettle();
-      expect(find.text('Start Over'), findsOneWidget);
+      expect(find.text('New Game Plus'), findsOneWidget);
       expect(find.text('Program completed'), findsOneWidget);
-      await tester.tap(find.text('Start Over'));
+      await tester.tap(find.text('New Game Plus'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(progress.currentWeek, isNull);
       expect(progress.entry(1, 'Upper', 1, 0).weight, '25');
-      expect(find.text('Start Over'), findsOneWidget);
+      expect(find.text('New Game Plus'), findsOneWidget);
 
-      await tester.tap(find.text('Start Over'));
+      await tester.tap(find.text('New Game Plus'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Reset all'));
+      await tester.tap(find.widgetWithText(TextButton, 'New Game Plus'));
       await tester.pumpAndSettle();
       await drainWrites(tester, progress);
       expect(progress.currentWeek, 1);
       expect(progress.hasEntries(1, 'Upper'), isFalse);
-      expect(find.text('Start Over'), findsNothing);
+      expect(find.text('New Game Plus'), findsNothing);
       expect(find.text('Program completed'), findsNothing);
-      expect(find.text('All progress reset.'), findsOneWidget);
+      expect(find.text('Prestige 1! New Game Plus started.'), findsOneWidget);
       final headers = tester.widgetList<WeekHeader>(find.byType(WeekHeader));
       expect(
         headers.where((header) => header.expanded).map((header) => header.week),

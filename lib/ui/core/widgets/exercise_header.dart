@@ -77,7 +77,7 @@ class ExerciseHeader extends StatelessWidget {
                           ),
                           child: DropdownButton<String>(
                           value: movement ?? exercise.name,
-                          isExpanded: false,
+                          isExpanded: true,
                           itemHeight: null,
                           style: Theme.of(context).textTheme.titleMedium,
                           items: [

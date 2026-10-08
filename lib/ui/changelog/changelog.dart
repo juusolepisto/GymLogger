@@ -34,7 +34,7 @@ const changelog = [
     version: '1.0.4',
     changes: [
       'Exercise variation dropdown made more clear.',
-      'Added ability to reset all progress and start over.',
+      'Added ability to start the program over and gain level up a prestige.',
     ],
   ),
 ];

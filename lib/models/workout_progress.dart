@@ -7,6 +7,8 @@ class WorkoutProgress {
   final Map<String, SetEntry> _sets = {};
   final Map<String, String> _movements = {};
   final Set<String> _completed = {};
+  final Map<String, int> _prestige = {};
+  int get prestige => _prestige['$_workoutsPerWeek'] ?? 0;
   int _workoutsPerWeek = 4;
   int get workoutsPerWeek => _workoutsPerWeek;
   List<String> get workouts => WorkoutProgram.workoutsFor(_workoutsPerWeek);
@@ -47,8 +49,9 @@ class WorkoutProgress {
   int completedCount(int week) =>
       workouts.where((w) => isCompleted(week, w)).length;
 
-  bool canShowPreviousWeek(int week) =>
-      week > 1 && completedCount(week - 1) == workouts.length;
+  bool canShowPreviousWeek(int week) => week == 1
+      ? prestige > 0
+      : week > 1 && completedCount(week - 1) == workouts.length;
 
   Exercise? previousExerciseFor(
     int week,
@@ -147,8 +150,41 @@ class WorkoutProgress {
     _completed.removeWhere((key) => key.startsWith(prefix));
   }
 
-  /// Clears all progress in the selected plan, including unfinished entries.
-  void resetAll(){
+  /// Starts a new run, reserving week zero for the last run's week 12.
+  /// The archive uses the original exercise and prescription set indices.
+  void startNewGamePlus() {
+    if (currentWeek != null) {
+      throw StateError('Complete the program before starting New Game +');
+    }
+    final archivePrefix = '$_workoutsPerWeek/0/';
+    final finalPrefix = '$_workoutsPerWeek/12/';
+    _sets.removeWhere((key, _) => key.startsWith(archivePrefix));
+    _movements.removeWhere((key, _) => key.startsWith(archivePrefix));
+    _sets.addAll(
+      Map.fromEntries(
+        _sets.entries
+            .where((entry) => entry.key.startsWith(finalPrefix))
+            .map(
+              (entry) => MapEntry(
+                '$archivePrefix${entry.key.substring(finalPrefix.length)}',
+                entry.value,
+              ),
+            ),
+      ),
+    );
+    _movements.addAll(
+      Map.fromEntries(
+        _movements.entries
+            .where((entry) => entry.key.startsWith(finalPrefix))
+            .map(
+              (entry) => MapEntry(
+                '$archivePrefix${entry.key.substring(finalPrefix.length)}',
+                entry.value,
+              ),
+            ),
+      ),
+    );
+    _prestige['$_workoutsPerWeek'] = prestige + 1;
     for (var week = 1; week <= 12; week++) {
       resetWeek(week);
     }
@@ -161,7 +197,8 @@ class WorkoutProgress {
   }
 
   Map<String, dynamic> toJson() => {
-    'version': 2,
+    'version': 3,
+    'prestige': Map<String, int>.of(_prestige),
     'workoutsPerWeek': _workoutsPerWeek,
     'sets': _sets.map((key, value) => MapEntry(key, value.toJson())),
     'movements': Map<String, String>.of(_movements),
@@ -171,7 +208,7 @@ class WorkoutProgress {
   factory WorkoutProgress.fromJson(Map<String, dynamic> json) {
     final store = WorkoutProgress();
     final version = json['version'];
-    if (version != 1 && version != 2) {
+    if (version != 1 && version != 2 && version != 3) {
       throw const FormatException('Unsupported progress version');
     }
     final days = version == 1 ? 4 : json['workoutsPerWeek'];
@@ -192,6 +229,16 @@ class WorkoutProgress {
       (key, value) => MapEntry(key, value as String),
     );
     store._workoutsPerWeek = days as int;
+    final prestige = (json['prestige'] as Map<String, dynamic>? ?? {}).map((
+      key,
+      value,
+    ) {
+      if ((key != '4' && key != '5') || value is! int || value < 0) {
+        throw const FormatException('Invalid prestige level');
+      }
+      return MapEntry(key, value);
+    });
+    store._prestige.addAll(prestige);
     store._movements.addAll(movements);
     store._sets.addAll(sets);
     store._completed.addAll(completed);

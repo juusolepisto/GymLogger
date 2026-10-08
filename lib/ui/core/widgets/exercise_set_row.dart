@@ -8,6 +8,7 @@ class ExerciseSetRow extends StatefulWidget {
   final String label;
   final SetEntry initialEntry;
   final SetEntry? previousEntry;
+  final String previousLabel;
   final String? previousMovement;
   final ValueChanged<SetEntry> onChanged;
   final bool readOnly;
@@ -18,6 +19,7 @@ class ExerciseSetRow extends StatefulWidget {
     required this.initialEntry,
     this.previousEntry,
     this.previousMovement,
+    this.previousLabel = 'Last week',
     required this.onChanged,
     required this.readOnly,
   });
@@ -147,7 +149,7 @@ class _ExerciseSetRowState extends State<ExerciseSetRow> {
             Padding(
               padding: const EdgeInsets.fromLTRB(35, 5, 4, 6),
               child: Text(
-                'Last week: ${widget.previousMovement == null ? '' : '${widget.previousMovement} · '}'
+                '${widget.previousLabel}: ${widget.previousMovement == null ? '' : '${widget.previousMovement} · '}'
                 'Weight ${previous.weight.isEmpty ? '—' : previous.weight} · '
                 'Reps ${previous.reps.isEmpty ? '—' : previous.reps}',
                 style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),

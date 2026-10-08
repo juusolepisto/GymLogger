@@ -14,9 +14,31 @@ class HomeScreen extends StatelessWidget {
     listenable: viewModel,
     builder: (context, _) => Scaffold(
       appBar: AppBar(
-        title: Text(
-          'GymLogger',
-          style: Theme.of(context).textTheme.headlineSmall,
+        title: ListenableBuilder(
+          listenable: viewModel.progress ?? viewModel,
+          builder: (context, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    'GymLogger',
+                    style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  if ((viewModel.progress?.prestige ?? 0) > 0)
+                    Text(
+                      'Prestige ${viewModel.progress!.prestige}',
+                      style: TextStyle(
+                        fontSize: Theme.of(context).textTheme.titleSmall?.fontSize,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       body: SafeArea(

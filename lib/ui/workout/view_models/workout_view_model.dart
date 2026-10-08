@@ -28,6 +28,7 @@ class WorkoutViewModel extends ChangeNotifier {
   int get workoutsPerWeek => _progress.workoutsPerWeek;
   List<String> get workouts => _progress.workouts;
   int? get currentWeek => _progress.currentWeek;
+  int get prestige => _progress.prestige;
   int completedCount(int week) => _progress.completedCount(week);
   bool canShowPreviousWeek(int week) => _progress.canShowPreviousWeek(week);
   SetEntry? previousEntryFor(
@@ -110,8 +111,8 @@ class WorkoutViewModel extends ChangeNotifier {
     return _save();
   }
 
-  Future<void> resetAll() {
-    _progress.resetAll();
+  Future<void> startNewGamePlus() {
+    _progress.startNewGamePlus();
     return _save();
   }
 

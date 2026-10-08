@@ -41,13 +41,17 @@ void main() {
       final vm = await WorkoutViewModel.load(repository);
       addTearDown(vm.dispose);
       vm.updateSet(12, 'Upper', 1, 0, const SetEntry(weight: '30', reps: '8'));
-      await vm.finish(12, 'Upper');
+      for (var week = 1; week <= 12; week++) {
+        for (final workout in vm.workouts) {
+          await vm.finish(week, workout);
+        }
+      }
       final savedBeforeReset = repository.snapshots.length;
       final observedWeeks = <int?>[];
       vm.addListener(() => observedWeeks.add(vm.currentWeek));
 
       repository.fail = true;
-      await vm.resetAll();
+      await vm.startNewGamePlus();
       expect(vm.saveError, isNotNull);
       expect(vm.saving, isFalse);
       expect(vm.hasEntries(12, 'Upper'), isFalse);
@@ -62,8 +66,10 @@ void main() {
       expect(repository.snapshots.last.hasEntries(12, 'Upper'), isFalse);
       expect(repository.snapshots.last.isCompleted(12, 'Upper'), isFalse);
 
-      await vm.resetAll();
-      expect(repository.snapshots.length, savedBeforeReset + 2);
+      expect(() => vm.startNewGamePlus(), throwsStateError);
+      expect(vm.prestige, 1);
+      expect(repository.snapshots.last.prestige, 1);
+      expect(repository.snapshots.length, savedBeforeReset + 1);
     },
   );
 

@@ -17,6 +17,7 @@ class ExerciseCard extends StatelessWidget {
     this.entryFor,
     this.previousEntryFor,
     this.previousMovement,
+    this.previousLabel = 'Last week',
     this.onSetChanged,
     this.readOnly = false,
     this.movement,
@@ -29,6 +30,7 @@ class ExerciseCard extends StatelessWidget {
   final VoidCallback onToggle;
   final SetEntry Function(int set)? entryFor;
   final SetEntry? Function(int workSet)? previousEntryFor;
+  final String previousLabel;
   final String? previousMovement;
   final void Function(int set, SetEntry entry)? onSetChanged;
   final bool readOnly;
@@ -152,6 +154,7 @@ class ExerciseCard extends StatelessWidget {
                         set.key - exercise.warmupSets,
                       ),
                       previousMovement: previousMovement,
+                      previousLabel: previousLabel,
                       onChanged: (value) => onSetChanged?.call(set.key, value),
                       readOnly: readOnly,
                       label: '${set.key - exercise.warmupSets + 1}',
