@@ -56,6 +56,12 @@ class ChangelogScreen extends StatelessWidget {
           );
         },
       ),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+        ),
+      ),    
     );
   }
 }
