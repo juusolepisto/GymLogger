@@ -36,6 +36,7 @@ class WorkoutCard extends StatelessWidget {
           color: ready
               ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
               : Theme.of(context).colorScheme.outline,
+          width: ready ? 3 : 1,
         ),
       ),
       clipBehavior: Clip.antiAlias,
